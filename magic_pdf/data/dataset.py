@@ -382,7 +382,7 @@ class MultiFileDataset(Dataset):
             raise RuntimeError("No valid files were processed")
         
         # Get the final PDF bytes
-        self._data_bits = pdf_doc.tobytes()
+        self._data_bits = pdf_doc.tobytes(deflate=True)
         pdf_doc.close()
         
         # Reopen the PDF for processing
