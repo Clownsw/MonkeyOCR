@@ -31,10 +31,6 @@ MonkeyOCR: Document Parsing with a Structure-Recognition-Relation Triplet Paradi
 ## News 
 * ```2026.01.30 ``` 🚀 We release [MonkeyDoc](https://www.modelscope.cn/datasets/zenosai/MonkeyDoc) and provide the necessary details of our data generation pipeline.
 * ```2025.11.14 ``` 🚀 We release [MonkeyOCR-v1.5](https://arxiv.org/abs/2511.10390) Technical Report, achieving the best document parsing performance to date. [Demo](https://aiwrite.wps.cn/pdf/parse/web/).
-<p align="center">
-<img src="./asserts/MonkeyOCR_v1_5.jpg" width=800 border="0" />
-<p>
-	
 * ```2025.07.10 ``` 🚀 We release [MonkeyOCR-pro-1.2B](https://huggingface.co/echo840/MonkeyOCR-pro-1.2B), a leaner and faster version model that outperforms our previous 3B version in accuracy, speed, and efficiency.
 * ```2025.06.12 ``` 🚀 The model’s trending on [Hugging Face](https://huggingface.co/models?sort=trending) #2.
 * ```2025.06.05 ``` 🚀 We release [MonkeyOCR](https://huggingface.co/echo840/MonkeyOCR), an English and Chinese documents parsing model.
