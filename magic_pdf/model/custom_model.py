@@ -1,3 +1,4 @@
+import json
 import os
 import time
 import torch
@@ -6,6 +7,7 @@ from magic_pdf.model.sub_modules.model_init import AtomModelSingleton
 from magic_pdf.model.model_list import AtomicModel
 from magic_pdf.model.async_vllm import MonkeyChat_vLLM_async
 from magic_pdf.utils.load_image import load_image, encode_image_base64
+from magic_pdf.model.sub_modules.reading_oreder.layoutreader.helpers import LayoutLMv3WithCategoryEmbedding
 from transformers import LayoutLMv3ForTokenClassification
 from loguru import logger
 import yaml
@@ -68,7 +70,7 @@ class MonkeyOCR:
                 doclayout_yolo_weights=layout_model_path,
                 device=self.device,
             )
-        elif self.layout_model_name == MODEL_NAME.PaddleXLayoutModel:
+        elif self.layout_model_name in [MODEL_NAME.PaddleXLayoutModel, MODEL_NAME.PP_DoclayoutV2]:
             layout_model_path = None
             if self.layout_model_name in self.configs['weights']:
                 layout_model_path = os.path.join(models_dir, self.configs['weights'][self.layout_model_name])
@@ -79,27 +81,32 @@ class MonkeyOCR:
                     )
             self.layout_model = atom_model_manager.get_atom_model(
                 atom_model_name=AtomicModel.Layout,
-                layout_model_name=MODEL_NAME.PaddleXLayoutModel,
+                layout_model_name=self.layout_model_name,
                 paddlexlayout_model_dir=layout_model_path,
                 device=self.device,
             )
         logger.info(f'layout model loaded: {self.layout_model_name}')
 
 
-        layout_reader_config = self.layout_config.get('reader')
-        self.layout_reader_name = layout_reader_config.get('name')
-        if self.layout_reader_name == 'layoutreader':
-            layoutreader_model_dir = os.path.join(models_dir, self.configs['weights'][self.layout_reader_name])
-            if os.path.exists(layoutreader_model_dir):
-                model = LayoutLMv3ForTokenClassification.from_pretrained(
-                    layoutreader_model_dir
-                )
+        self.layoutreader_name = self.layout_config.get('reader').get('name')
+        layoutreader_model_dir = os.path.join(models_dir, self.configs['weights'][self.layoutreader_name])
+        if not os.path.exists(layoutreader_model_dir):
+            raise FileNotFoundError(
+                f"Reading Order model file not found at '{layoutreader_model_dir}'. "
+                "Please run 'python tools/download_model.py' to download the required models."
+            )
+        layoutreader_config = json.load(open(os.path.join(layoutreader_model_dir, 'config.json'), 'r'))
+        layoutreader_arch = layoutreader_config.get('architectures')[0]
+        if layoutreader_arch == 'LayoutLMv3ForTokenClassification':
+            model = LayoutLMv3ForTokenClassification.from_pretrained(layoutreader_model_dir)
+            if bf16_supported:
+                model.to(self.device).eval().bfloat16()
             else:
-                raise FileNotFoundError(
-                    f"Reading Order model file not found at '{layoutreader_model_dir}'. "
-                    "Please run 'python tools/download_model.py' to download the required models."
-                )
-
+                model.to(self.device).eval()
+        elif layoutreader_arch == 'LayoutLMv3WithCategoryEmbedding':
+            model = LayoutLMv3WithCategoryEmbedding.from_pretrained(
+                layoutreader_model_dir, num_category=8, num_labels=510, visual_embed=False
+            )
             if bf16_supported:
                 model.to(self.device).eval().bfloat16()
             else:
@@ -107,7 +114,7 @@ class MonkeyOCR:
         else:
             logger.error('model name not allow')
         self.layoutreader_model = model
-        logger.info(f'layoutreader model loaded: {self.layout_reader_name}')
+        logger.info(f'layoutreader model loaded: {self.layoutreader_name, layoutreader_arch}')
 
         self.chat_config = self.configs.get('chat_config', {})
         chat_backend = self.chat_config.get('backend', 'lmdeploy')
@@ -165,16 +172,20 @@ class MonkeyOCR:
 class MonkeyChat_LMDeploy:
     def __init__(self, model_path, dp=1, tp=1): 
         try:
-            from lmdeploy import pipeline, GenerationConfig, ChatTemplateConfig
+            from lmdeploy import pipeline, GenerationConfig, ChatTemplateConfig, __version__
         except ImportError:
             raise ImportError("LMDeploy is not installed. Please install it following: "
                               "https://github.com/Yuliang-Liu/MonkeyOCR/blob/main/docs/install_cuda_pp.md "
                               "to use MonkeyChat_LMDeploy.")
         self.model_name = os.path.basename(model_path)
         self.engine_config = self._auto_config_dtype(dp=dp, tp=tp)
+        if __version__.startswith('0.10.') or __version__.startswith('0.11.'):
+            chat_template = ChatTemplateConfig('hf',model_path)
+        else:
+            chat_template = ChatTemplateConfig('qwen2d5-vl')
         self.pipe = pipeline(model_path,
                              backend_config=self.engine_config,
-                             chat_template_config=ChatTemplateConfig('qwen2d5-vl'),
+                             chat_template_config=chat_template,
                              log_level='ERROR')
         self.gen_config=GenerationConfig(max_new_tokens=4096,do_sample=True,temperature=0,repetition_penalty=1.05)
 
@@ -208,10 +219,10 @@ class MonkeyChat_vLLM:
                                "to use MonkeyChat_vLLM.")
         self.model_name = os.path.basename(model_path)
         self.pipe = LLM(model=model_path,
-                        max_seq_len_to_capture=10240,
                         mm_processor_kwargs={'use_fast': True},
-                        gpu_memory_utilization=self._auto_gpu_mem_ratio(0.9),
-                        tensor_parallel_size=tp)
+                        max_model_len=10240,
+                        gpu_memory_utilization=self._auto_gpu_mem_ratio(0.8),
+                        tensor_parallel_size=tp,)
         self.gen_config = SamplingParams(max_tokens=4096,temperature=0,repetition_penalty=1.05)
     
     def _auto_gpu_mem_ratio(self, ratio):
