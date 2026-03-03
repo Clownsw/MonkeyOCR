@@ -21,7 +21,6 @@ ENV PIP_NO_CACHE_DIR=1
 
 # Install PyTorch (updated to version 2.6.0)
 ARG CUDA_VERSION=126
-RUN pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu${CUDA_VERSION}
 
 # Copy project code
 COPY --chown=appuser:appuser . /app/MonkeyOCR
@@ -29,18 +28,20 @@ COPY --chown=appuser:appuser . /app/MonkeyOCR
 # Set working directory to /app/MonkeyOCR
 WORKDIR /app/MonkeyOCR
 
-# Install project itself
-RUN pip install -e .
-
-# Install inference backend dependencies
-RUN pip install lmdeploy==0.9.2
-
 # Install model download related dependencies
 RUN pip install modelscope huggingface_hub
 
 # Install PaddlePaddle and PaddleX for PP-DocLayout_plus-L support
 RUN pip install paddlepaddle-gpu==3.0.0 -i https://www.paddlepaddle.org.cn/packages/stable/cu${CUDA_VERSION}/
-RUN pip install "paddlex[base]"
+RUN pip install paddlex[base]==3.3.0
+RUN pip install langchain==0.3.26
+
+# Install project itself
+RUN pip install -e .
+
+# Install inference backend dependencies
+RUN pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu${CUDA_VERSION}
+RUN pip install lmdeploy==0.9.2
 
 # Copy model download scripts
 COPY --chown=appuser:appuser docker/download_models.sh /app/MonkeyOCR/
