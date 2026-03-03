@@ -40,7 +40,7 @@ RUN pip install langchain==0.3.26
 RUN pip install -e .
 
 # Install inference backend dependencies
-RUN pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu${CUDA_VERSION}
+RUN pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 -f https://mirrors.aliyun.com/pytorch-wheels/cu${CUDA_VERSION}
 RUN pip install lmdeploy==0.9.2
 
 # Copy model download scripts
