@@ -3,7 +3,7 @@
 This guide walks you through setting up the environment for **MonkeyOCR** with CUDA support. You can choose **one** of the backends — **LMDeploy** (recomend), **vLLM**, or **transformers** — to install and use. It covers installation instructions for each of them.
 
 ## Step 1. Install PaddleX
-To use `PP-DocLayout_plus-L`, you must install two additional core libraries, **PaddlePaddle** and **PaddleX**.
+To use `PP-DocLayoutV2`, you must install two additional core libraries, **PaddlePaddle** and **PaddleX**.
 
 Make sure your pytorch version is compatible with the PaddlePaddle version you are installing, referring to the official **[PaddleX](https://github.com/PaddlePaddle/PaddleX)**
 
@@ -19,7 +19,7 @@ export CUDA_VERSION=126 # for CUDA 12.6
 
 pip install paddlepaddle-gpu==3.0.0 -i https://www.paddlepaddle.org.cn/packages/stable/cu${CUDA_VERSION}/
 pip install langchain==0.3.26
-pip install "paddlex[base]==3.1.4"
+pip install "paddlex==3.3"
 ```
 
 ## Step 2. Install Inference Backend
