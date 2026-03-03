@@ -1,12 +1,12 @@
 device: cuda # cuda / cpu / mps (using `transformers` as backend)
 weights:
   PP-DocLayoutV2: Structure/PP-DocLayoutV2
-  layoutreader_v20: Relation
+  layoutreader: Relation
 models_dir: model_weight
 layout_config:
   model: PP-DocLayoutV2
   reader:
-    name: layoutreader_v20
+    name: layoutreader
 chat_config:
   weight_path: model_weight/Recognition
   backend: lmdeploy # lmdeploy / vllm / transformers / api / lmdeploy_queue / vllm_queue / vllm_async
