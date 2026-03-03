@@ -18,8 +18,8 @@ export CUDA_VERSION=126 # for CUDA 12.6
 # export CUDA_VERSION=118 # for CUDA 11.8
 
 pip install paddlepaddle-gpu==3.0.0 -i https://www.paddlepaddle.org.cn/packages/stable/cu${CUDA_VERSION}/
+pip install paddlex[base]==3.3.0
 pip install langchain==0.3.26
-pip install "paddlex==3.3"
 ```
 
 ## Step 2. Install Inference Backend
