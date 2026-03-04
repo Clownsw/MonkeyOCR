@@ -26,12 +26,10 @@ log_error() {
 # Check if models already exist
 check_models_exist() {
     local model_files=(
-        "Structure/doclayout_yolo_docstructbench_imgsz1280_2501.pt"
-        "Structure/layout_zh.pt"
+        "Structure/PP-DocLayoutV2"
         "Recognition/model-00001-of-00002.safetensors"
         "Recognition/model-00002-of-00002.safetensors"
         "Relation/model.safetensors"
-        "Structure/PP-DocLayout_plus-L/inference.pdiparams"
     )
 
     for model_file in "${model_files[@]}"; do

@@ -31,7 +31,7 @@ WORKDIR /app/MonkeyOCR
 # Install model download related dependencies
 RUN pip install modelscope huggingface_hub
 
-# Install PaddlePaddle and PaddleX for PP-DocLayout_plus-L support
+# Install PaddlePaddle and PaddleX for PP-DocLayoutV2 support
 RUN pip install paddlepaddle-gpu==3.0.0 -i https://www.paddlepaddle.org.cn/packages/stable/cu${CUDA_VERSION}/
 RUN pip install paddlex[base]==3.3.0
 RUN pip install langchain==0.3.26
