@@ -350,6 +350,10 @@ Once the API service is running, you can access the API documentation at http://
    ```bash
    docker compose build monkeyocr
    ```
+   *or* pull our latest official image:
+   ```bash
+   docker pull zenosai/monkeyocr:260304
+   ```
 
 > [!IMPORTANT]
 >
